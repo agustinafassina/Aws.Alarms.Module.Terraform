@@ -11,7 +11,27 @@ locals {
     { Environment = var.environment }
   )
 
-  sns_target_arns = toset(var.alarm_actions)
+  create_sns_topic = var.create_sns_topic
+  sns_topic_name   = "${local.name_prefix}-alerts"
+
+  created_sns_topic_arn = one(aws_sns_topic.alerts[*].arn)
+
+  effective_alarm_actions = distinct(compact(concat(
+    local.create_sns_topic ? [local.created_sns_topic_arn] : [],
+    var.alarm_actions
+  )))
+
+  effective_ok_actions = distinct(compact(concat(
+    local.create_sns_topic && var.sns_notify_on_ok ? [local.created_sns_topic_arn] : [],
+    var.ok_actions
+  )))
+
+  effective_insufficient_data_actions = distinct(compact(concat(
+    local.create_sns_topic && var.sns_notify_on_insufficient_data ? [local.created_sns_topic_arn] : [],
+    var.insufficient_data_actions
+  )))
+
+  sns_target_arns = toset(local.effective_alarm_actions)
 
   eventbridge_rule_names = {
     unauthorized_console_login = "${local.name_prefix}-unauthorized-console-login"

@@ -2,10 +2,14 @@ account_alias = "dev"
 environment   = "dev"
 aws_region    = "eu-west-1"
 
-alarm_actions = [
-  "arn:aws:sns:eu-west-1:123456789012:account-alerts-dev",
+create_sns_topic = true
+notification_emails = [
+  "platform-alerts-dev@example.com",
 ]
+sns_notify_on_ok                = false
+sns_notify_on_insufficient_data = false
 
+alarm_actions             = []
 ok_actions                = []
 insufficient_data_actions = []
 

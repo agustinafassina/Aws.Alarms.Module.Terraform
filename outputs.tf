@@ -13,6 +13,26 @@ output "region" {
   value       = data.aws_region.current.region
 }
 
+output "sns_topic_arn" {
+  description = "ARN of the managed SNS alerts topic, or null when create_sns_topic is false."
+  value       = local.created_sns_topic_arn
+}
+
+output "sns_topic_name" {
+  description = "Name of the managed SNS alerts topic, or null when create_sns_topic is false."
+  value       = try(aws_sns_topic.alerts[0].name, null)
+}
+
+output "sns_subscription_emails" {
+  description = "Email endpoints subscribed to the managed SNS topic."
+  value       = sort(keys(aws_sns_topic_subscription.alert_emails))
+}
+
+output "effective_alarm_actions" {
+  description = "Final ALARM / EventBridge notification ARNs after merging managed SNS and alarm_actions."
+  value       = local.effective_alarm_actions
+}
+
 output "eventbridge_rule_arns" {
   description = "Map of EventBridge security rule key to rule ARN."
   value       = { for k, rule in aws_cloudwatch_event_rule.security : k => rule.arn }

@@ -13,9 +13,9 @@ resource "aws_cloudwatch_metric_alarm" "security_metrics" {
   threshold           = each.value.threshold
   treat_missing_data  = "notBreaching"
 
-  alarm_actions             = var.alarm_actions
-  ok_actions                = var.ok_actions
-  insufficient_data_actions = var.insufficient_data_actions
+  alarm_actions             = local.effective_alarm_actions
+  ok_actions                = local.effective_ok_actions
+  insufficient_data_actions = local.effective_insufficient_data_actions
 
   tags = merge(local.common_tags, {
     AlarmType = each.key
@@ -44,9 +44,9 @@ resource "aws_cloudwatch_metric_alarm" "ec2_cpu" {
     InstanceId = each.value
   }
 
-  alarm_actions             = var.alarm_actions
-  ok_actions                = var.ok_actions
-  insufficient_data_actions = var.insufficient_data_actions
+  alarm_actions             = local.effective_alarm_actions
+  ok_actions                = local.effective_ok_actions
+  insufficient_data_actions = local.effective_insufficient_data_actions
 
   tags = merge(local.common_tags, {
     AlarmType = "ec2_cpu"
@@ -74,9 +74,9 @@ resource "aws_cloudwatch_metric_alarm" "s3_bucket_size" {
     StorageType = "StandardStorage"
   }
 
-  alarm_actions             = var.alarm_actions
-  ok_actions                = var.ok_actions
-  insufficient_data_actions = var.insufficient_data_actions
+  alarm_actions             = local.effective_alarm_actions
+  ok_actions                = local.effective_ok_actions
+  insufficient_data_actions = local.effective_insufficient_data_actions
 
   tags = merge(local.common_tags, {
     AlarmType = "s3_bucket_size"
@@ -103,9 +103,9 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
     DBInstanceIdentifier = each.value
   }
 
-  alarm_actions             = var.alarm_actions
-  ok_actions                = var.ok_actions
-  insufficient_data_actions = var.insufficient_data_actions
+  alarm_actions             = local.effective_alarm_actions
+  ok_actions                = local.effective_ok_actions
+  insufficient_data_actions = local.effective_insufficient_data_actions
 
   tags = merge(local.common_tags, {
     AlarmType = "rds_cpu"
@@ -132,9 +132,9 @@ resource "aws_cloudwatch_metric_alarm" "rds_free_storage" {
     DBInstanceIdentifier = each.value
   }
 
-  alarm_actions             = var.alarm_actions
-  ok_actions                = var.ok_actions
-  insufficient_data_actions = var.insufficient_data_actions
+  alarm_actions             = local.effective_alarm_actions
+  ok_actions                = local.effective_ok_actions
+  insufficient_data_actions = local.effective_insufficient_data_actions
 
   tags = merge(local.common_tags, {
     AlarmType = "rds_free_storage"
@@ -161,9 +161,9 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections" {
     DBInstanceIdentifier = each.value
   }
 
-  alarm_actions             = var.alarm_actions
-  ok_actions                = var.ok_actions
-  insufficient_data_actions = var.insufficient_data_actions
+  alarm_actions             = local.effective_alarm_actions
+  ok_actions                = local.effective_ok_actions
+  insufficient_data_actions = local.effective_insufficient_data_actions
 
   tags = merge(local.common_tags, {
     AlarmType = "rds_connections"

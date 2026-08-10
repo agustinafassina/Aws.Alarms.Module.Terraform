@@ -2,17 +2,17 @@ account_alias = "prod"
 environment   = "prod"
 aws_region    = "eu-west-1"
 
-alarm_actions = [
-  "arn:aws:sns:eu-west-1:123456789012:account-alerts-prod",
+create_sns_topic = true
+notification_emails = [
+  "platform-alerts-prod@example.com",
+  "oncall-prod@example.com",
 ]
+sns_notify_on_ok                = true
+sns_notify_on_insufficient_data = true
 
-ok_actions = [
-  "arn:aws:sns:eu-west-1:123456789012:account-alerts-prod",
-]
-
-insufficient_data_actions = [
-  "arn:aws:sns:eu-west-1:123456789012:account-alerts-prod",
-]
+alarm_actions             = []
+ok_actions                = []
+insufficient_data_actions = []
 
 cloudtrail_log_group_name = "/aws/cloudtrail/prod"
 config_role_arn           = "arn:aws:iam::123456789012:role/aws-config-role-prod"

@@ -2,14 +2,15 @@ account_alias = "stage"
 environment   = "stage"
 aws_region    = "eu-west-1"
 
-alarm_actions = [
-  "arn:aws:sns:eu-west-1:123456789012:account-alerts-stage",
+create_sns_topic = true
+notification_emails = [
+  "platform-alerts-stage@example.com",
 ]
+sns_notify_on_ok                = true
+sns_notify_on_insufficient_data = false
 
-ok_actions = [
-  "arn:aws:sns:eu-west-1:123456789012:account-alerts-stage",
-]
-
+alarm_actions             = []
+ok_actions                = []
 insufficient_data_actions = []
 
 cloudtrail_log_group_name = "/aws/cloudtrail/stage"

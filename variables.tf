@@ -26,21 +26,52 @@ variable "tags" {
 }
 
 variable "alarm_actions" {
-  description = "ARNs to notify when an alarm transitions to ALARM or when an EventBridge rule matches."
+  description = "Additional ARNs to notify on ALARM / EventBridge matches. Merged with the managed SNS topic when create_sns_topic is true."
   type        = list(string)
   default     = []
 }
 
 variable "ok_actions" {
-  description = "ARNs to notify when an alarm transitions to OK."
+  description = "Additional ARNs to notify on OK. Merged with the managed SNS topic when create_sns_topic and sns_notify_on_ok are true."
   type        = list(string)
   default     = []
 }
 
 variable "insufficient_data_actions" {
-  description = "ARNs to notify when an alarm transitions to INSUFFICIENT_DATA."
+  description = "Additional ARNs to notify on INSUFFICIENT_DATA. Merged with the managed SNS topic when create_sns_topic and sns_notify_on_insufficient_data are true."
   type        = list(string)
   default     = []
+}
+
+variable "create_sns_topic" {
+  description = "Create a managed SNS topic with email subscriptions and a publish policy for EventBridge and CloudWatch."
+  type        = bool
+  default     = true
+}
+
+variable "notification_emails" {
+  description = "Email addresses subscribed to the managed SNS topic when create_sns_topic is true. Each address must confirm the subscription."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for email in var.notification_emails : can(regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", email))
+    ])
+    error_message = "Each notification_emails value must be a valid email address."
+  }
+}
+
+variable "sns_notify_on_ok" {
+  description = "Also notify the managed SNS topic when CloudWatch alarms transition to OK."
+  type        = bool
+  default     = false
+}
+
+variable "sns_notify_on_insufficient_data" {
+  description = "Also notify the managed SNS topic when CloudWatch alarms transition to INSUFFICIENT_DATA."
+  type        = bool
+  default     = false
 }
 
 variable "cloudtrail_log_group_name" {
