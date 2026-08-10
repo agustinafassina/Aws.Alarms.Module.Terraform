@@ -2,12 +2,13 @@
 
 English | [Español](README.es.md)
 
-Root Terraform stack that deploys account-level security and usage monitoring for AWS. It creates EventBridge rules, CloudWatch Logs metric filters, CloudWatch metric alarms, and AWS Config managed rules. Notification targets, CloudTrail log delivery, and the Config recorder are **not** created here; they must already exist and are passed in as variables.
+Root Terraform stack that deploys account-level security and usage monitoring for AWS. It creates an SNS alerts topic with email subscriptions, EventBridge rules, CloudWatch Logs metric filters, CloudWatch metric alarms, and AWS Config managed rules. CloudTrail log delivery and the Config recorder are **not** created here; they must already exist and are passed in as variables.
 
 ![Architecture](./docs/architecture.png)
 
 ## Features
 
+- Managed SNS topic with email subscriptions and publish policy for EventBridge / CloudWatch
 - Access key inactivity / rotation compliance and burst usage alarms
 - Unauthorized and suspicious console sign-in notifications
 - IAM policy and role change monitoring
@@ -24,14 +25,24 @@ Root Terraform stack that deploys account-level security and usage monitoring fo
 Before applying this stack, ensure the target account already has:
 
 1. **CloudTrail** delivering management events to a CloudWatch Logs group (the name you pass as `cloudtrail_log_group_name`).
-2. **SNS topic(s)** whose ARNs you pass in `alarm_actions` (and optionally `ok_actions` / `insufficient_data_actions`).
-3. **SNS topic policy** allowing publish from CloudWatch Alarms and EventBridge, for example:
-   - `cloudwatch.amazonaws.com`
-   - `events.amazonaws.com`
-4. **AWS Config** with an active configuration recorder and delivery channel when `enable_config_compliance = true`.
-5. The Config service role ARN in `config_role_arn` (used as a deployment precondition; the recorder must already use a suitable role).
+2. **AWS Config** with an active configuration recorder and delivery channel when `enable_config_compliance = true`.
+3. The Config service role ARN in `config_role_arn` (used as a deployment precondition; the recorder must already use a suitable role).
 
-This stack does **not** create SNS topics, CloudTrail trails, Config recorders, or KMS keys.
+Optional: set `create_sns_topic = false` and pass existing topic ARNs in `alarm_actions` / `ok_actions` / `insufficient_data_actions` if you already manage SNS elsewhere.
+
+This stack does **not** create CloudTrail trails, Config recorders, or KMS keys.
+
+## Notifications (SNS + email)
+
+When `create_sns_topic = true` (default), the stack creates:
+
+- SNS topic named `tf-account-<alias>-alerts`
+- Email subscriptions for each address in `notification_emails`
+- Topic policy allowing `sns:Publish` from `cloudwatch.amazonaws.com` and `events.amazonaws.com` (scoped to the account)
+
+After apply, **confirm each email subscription** from the inbox confirmation message. Until confirmed, emails will not be delivered.
+
+You can still append extra ARNs with `alarm_actions`. Use `sns_notify_on_ok` / `sns_notify_on_insufficient_data` to also wire the managed topic to OK / INSUFFICIENT_DATA alarm transitions.
 
 ## Architecture
 
@@ -64,6 +75,7 @@ Examples:
 | `variables.tf` | Inputs, enable flags, thresholds |
 | `locals.tf` | Naming maps, event patterns, filter definitions |
 | `data.tf` | Caller identity and region |
+| `sns.tf` | Managed SNS topic, email subscriptions, and topic policy |
 | `eventbridge_security.tf` | EventBridge rules and SNS targets |
 | `metric_filters.tf` | CloudWatch Logs metric filters on CloudTrail |
 | `cloudwatch_alarms.tf` | Metric and optional per-resource alarms |
@@ -132,7 +144,7 @@ Access-key Config rules are created only when both `enable_config_compliance` an
 
 ## How to use
 
-Replace placeholder account IDs, SNS ARNs, Config role ARNs, and CloudTrail log group names in the corresponding `.tfvars` file.
+Replace placeholder emails, Config role ARNs, and CloudTrail log group names in the corresponding `.tfvars` file.
 
 ### Initialize
 
@@ -145,17 +157,23 @@ terraform init
 ```bash
 terraform plan  -var-file=dev.tfvars
 terraform apply -var-file=dev.tfvars
-
-terraform plan  -var-file=stage.tfvars
-terraform apply -var-file=stage.tfvars
-
-terraform plan  -var-file=prod.tfvars
-terraform apply -var-file=prod.tfvars
 ```
+
+Confirm every SNS email subscription after the first apply.
 
 ### Example overrides
 
 ```hcl
+create_sns_topic = true
+notification_emails = [
+  "ops@example.com",
+  "security@example.com",
+]
+
+# Or reuse an existing topic instead:
+# create_sns_topic = false
+# alarm_actions    = ["arn:aws:sns:eu-west-1:123456789012:existing-alerts"]
+
 enable_s3_usage_alarms = true
 s3_bucket_names        = ["my-app-assets"]
 
@@ -170,9 +188,11 @@ rds_db_instance_identifiers = ["orders-db"]
 
 | Setting | `dev.tfvars` | `stage.tfvars` | `prod.tfvars` |
 |---|---|---|---|
+| SNS emails | One placeholder | One placeholder | Two placeholders |
+| `sns_notify_on_ok` | false | true | true |
+| `sns_notify_on_insufficient_data` | false | false | true |
 | Burst thresholds | More permissive | Intermediate | Stricter |
 | S3 / RDS usage families | Mostly off | On | On |
-| OK / insufficient-data actions | Empty | OK filled | OK + insufficient-data filled |
 | Per-resource lists | Empty placeholders | Empty placeholders | Empty placeholders (fill with inventory) |
 
 ## Important variables
@@ -182,7 +202,10 @@ rds_db_instance_identifiers = ["orders-db"]
 | `account_alias` | Naming prefix segment |
 | `environment` | Environment tag |
 | `aws_region` | Provider region |
-| `alarm_actions` | SNS (or other) ARNs for ALARM / EventBridge targets |
+| `create_sns_topic` | Create managed SNS topic + email subscriptions |
+| `notification_emails` | Email endpoints for the managed SNS topic |
+| `sns_notify_on_ok` / `sns_notify_on_insufficient_data` | Also notify managed SNS on OK / INSUFFICIENT_DATA |
+| `alarm_actions` | Extra ARNs merged with the managed SNS topic |
 | `cloudtrail_log_group_name` | Existing CloudTrail → Logs group |
 | `config_role_arn` | Existing Config service role ARN (required when Config rules are enabled) |
 | `enable_*` | Feature toggles per monitoring family (includes network, S3 policy, open SG, log deletion) |
@@ -195,6 +218,9 @@ rds_db_instance_identifiers = ["orders-db"]
 |---|---|
 | `name_prefix` | Shared resource name prefix |
 | `account_id` / `region` | Resolved deployment identity |
+| `sns_topic_arn` / `sns_topic_name` | Managed SNS topic (null if disabled) |
+| `sns_subscription_emails` | Subscribed email endpoints |
+| `effective_alarm_actions` | Final notification ARNs after SNS merge |
 | `eventbridge_rule_arns` | EventBridge rule ARNs by key |
 | `metric_filter_names` | Metric filter names by key |
 | `cloudwatch_alarm_arns` / `cloudwatch_alarm_names` | Flat alarm lists |
