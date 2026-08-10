@@ -1,4 +1,4 @@
-# Alarmas AWS a nivel de cuenta
+# ☁️ Alarmas AWS a nivel de cuenta
 
 [English](README.md) | Español
 
@@ -6,21 +6,21 @@ Stack raíz de Terraform que despliega monitoreo de seguridad y uso a nivel de c
 
 ![Arquitectura](./docs/architecture.png)
 
-## Características
+## ✨ Características
 
-- Topic SNS gestionado con suscripciones email y policy de publicación para EventBridge / CloudWatch
-- Cumplimiento por inactividad / rotación de access keys y alarmas por uso en ráfaga
-- Notificaciones de inicio de sesión no autorizado o sospechoso en la consola
-- Monitoreo de cambios en políticas y roles de IAM
-- Monitoreo de cambios en Security Groups / Network ACLs
-- Monitoreo de cambios en bucket policies y Block Public Access de S3
-- Reglas de Security Group abiertas a `0.0.0.0/0` o `::/0`
-- Monitoreo de borrado de log groups/streams de CloudWatch
-- Señales de uso inusual en EC2, S3 y RDS (basadas en CloudTrail y alarmas opcionales por recurso)
-- Monitoreo de cambios en CloudTrail y servicios críticos (cobertura ampliada de deshabilitación GuardDuty / Security Hub)
-- Reglas de cumplimiento managed de AWS Config con notificaciones `NON_COMPLIANT`
+- 📬 Topic SNS gestionado con suscripciones email y policy de publicación para EventBridge / CloudWatch
+- 🔑 Cumplimiento por inactividad / rotación de access keys y alarmas por uso en ráfaga
+- 🚪 Notificaciones de inicio de sesión no autorizado o sospechoso en la consola
+- 👤 Monitoreo de cambios en políticas y roles de IAM
+- 🛡️ Monitoreo de cambios en Security Groups / Network ACLs
+- 🪣 Monitoreo de cambios en bucket policies y Block Public Access de S3
+- 🌐 Reglas de Security Group abiertas a `0.0.0.0/0` o `::/0`
+- 🗑️ Monitoreo de borrado de log groups/streams de CloudWatch
+- 📈 Señales de uso inusual en EC2, S3 y RDS (basadas en CloudTrail y alarmas opcionales por recurso)
+- 🚨 Monitoreo de cambios en CloudTrail y servicios críticos (cobertura ampliada de deshabilitación GuardDuty / Security Hub)
+- ✅ Reglas de cumplimiento managed de AWS Config con notificaciones `NON_COMPLIANT`
 
-## Prerrequisitos
+## 📋 Prerrequisitos
 
 Antes de aplicar este stack, asegurate de que la cuenta destino ya tenga:
 
@@ -32,7 +32,7 @@ Opcional: seteá `create_sns_topic = false` y pasá ARNs de topics existentes en
 
 Este stack **no** crea trails de CloudTrail, recorders de Config ni claves KMS.
 
-## Notificaciones (SNS + email)
+## 📬 Notificaciones (SNS + email)
 
 Cuando `create_sns_topic = true` (default), el stack crea:
 
@@ -44,7 +44,7 @@ Después del apply, **confirmá cada suscripción email** desde el mensaje de co
 
 Podés sumar ARNs extras con `alarm_actions`. Usá `sns_notify_on_ok` / `sns_notify_on_insufficient_data` para cablear también el topic managed a transiciones OK / INSUFFICIENT_DATA.
 
-## Arquitectura
+## 🏗️ Arquitectura
 
 | Mecanismo | Casos de uso |
 |---|---|
@@ -52,7 +52,7 @@ Podés sumar ARNs extras con `alarm_actions`. Usá `sns_notify_on_ok` / `sns_not
 | Filtros de métricas + alarmas CloudWatch | Ráfaga de API con access key, gestión de access keys, picos de lanzamiento EC2, ráfaga API S3, cambios RDS, volumen de AccessDenied, SG abierto a `0.0.0.0/0` |
 | Reglas managed de AWS Config | Rotación de access keys, credenciales sin uso, MFA root, acceso público S3, cifrado EBS/RDS, CloudTrail habilitado, política de contraseñas |
 
-## Nombres
+## 🏷️ Nombres
 
 Todos los nombres lógicos se definen en `locals.tf` y siguen el patrón:
 
@@ -66,7 +66,7 @@ Ejemplos:
 - `tf-account-prod-access-key-api-burst`
 - `tf-account-prod-access-keys-rotated`
 
-## Estructura del repositorio
+## 📁 Estructura del repositorio
 
 | Archivo | Propósito |
 |---|---|
@@ -83,7 +83,7 @@ Ejemplos:
 | `outputs.tf` | ARNs de recursos y resumen por categoría |
 | `dev.tfvars` / `stage.tfvars` / `prod.tfvars` | Valores por entorno |
 
-## Catálogo de monitoreo
+## 🚨 Catálogo de monitoreo
 
 ### Reglas EventBridge
 
@@ -142,17 +142,17 @@ Cuando se informan listas y el flag `enable_*` correspondiente está en `true`:
 
 Las reglas Config de access keys se crean solo cuando `enable_config_compliance` y `enable_access_key_monitoring` están en `true`.
 
-## Cómo usarlo
+## 🚀 Cómo usarlo
 
 Reemplazá los placeholders de emails, ARN del rol de Config y nombre del log group de CloudTrail en el `.tfvars` correspondiente.
 
-### Inicializar
+### 1️⃣ Inicializar
 
 ```bash
 terraform init
 ```
 
-### Plan / apply por entorno
+### 2️⃣ Plan / apply por entorno
 
 ```bash
 terraform plan  -var-file=dev.tfvars
@@ -161,7 +161,7 @@ terraform apply -var-file=dev.tfvars
 
 Confirmá cada suscripción email de SNS después del primer apply.
 
-### Ejemplo de overrides
+### 3️⃣ Ejemplo de overrides
 
 ```hcl
 create_sns_topic = true
@@ -184,7 +184,7 @@ enable_rds_usage_alarms = true
 rds_db_instance_identifiers = ["orders-db"]
 ```
 
-## Perfiles por entorno
+## 🌍 Perfiles por entorno
 
 | Setting | `dev.tfvars` | `stage.tfvars` | `prod.tfvars` |
 |---|---|---|---|
@@ -195,7 +195,7 @@ rds_db_instance_identifiers = ["orders-db"]
 | Familias de uso S3 / RDS | Mayormente apagadas | Encendidas | Encendidas |
 | Listas por recurso | Placeholders vacíos | Placeholders vacíos | Placeholders vacíos (completar con inventario) |
 
-## Variables importantes
+## 🔧 Variables importantes
 
 | Nombre | Descripción |
 |---|---|
@@ -212,7 +212,7 @@ rds_db_instance_identifiers = ["orders-db"]
 | Variables de umbral / periodo | Ajustan la sensibilidad de las alarmas |
 | `ec2_instance_ids`, `s3_bucket_names`, `rds_db_instance_identifiers` | Alarmas opcionales por recurso |
 
-## Outputs
+## 📤 Outputs
 
 | Nombre | Descripción |
 |---|---|
@@ -228,7 +228,7 @@ rds_db_instance_identifiers = ["orders-db"]
 | `config_rule_arns` / `config_rule_names` | Reglas Config por clave |
 | `resources_by_category` | Resumen por categoría para auditoría |
 
-## Notas de coste y ruido
+## 💸 Notas de coste y ruido
 
 - Los filtros de métricas evalúan cada evento de log coincidente en el log group de CloudTrail; cuentas con mucho tráfico pueden subir el costo de CloudWatch Logs y métricas custom.
 - Las reglas managed de Config generan cargos de evaluación mientras el recorder esté activo.
@@ -236,13 +236,13 @@ rds_db_instance_identifiers = ["orders-db"]
 - El login a consola sin MFA puede ser ruidoso si federation o flujos break-glass no usan MFA; deshabilitá `enable_console_security_monitoring` o esa familia de reglas si hace falta.
 - Si Security Hub o GuardDuty ya cubren detecciones solapadas, usá los flags `enable_*` para evitar alertas duplicadas.
 
-## Extensiones futuras
+## 🔭 Extensiones futuras
 
 - Filtrado geográfico / allow-list CIDR para IPs inusuales de login a consola
 - Conformance Packs de AWS Config para cobertura CIS / FSBP más amplia
 - Topics SNS por severidad (warning vs critical) mediante listas de acciones separadas
 
-## Requisitos
+## 📦 Requisitos
 
 | Nombre | Versión |
 |---|---|

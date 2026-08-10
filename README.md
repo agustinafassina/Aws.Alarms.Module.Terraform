@@ -1,4 +1,4 @@
-# AWS Account-Level Alarms
+# ☁️ AWS Account-Level Alarms
 
 English | [Español](README.es.md)
 
@@ -6,21 +6,21 @@ Root Terraform stack that deploys account-level security and usage monitoring fo
 
 ![Architecture](./docs/architecture.png)
 
-## Features
+## ✨ Features
 
-- Managed SNS topic with email subscriptions and publish policy for EventBridge / CloudWatch
-- Access key inactivity / rotation compliance and burst usage alarms
-- Unauthorized and suspicious console sign-in notifications
-- IAM policy and role change monitoring
-- Security Group / Network ACL change monitoring
-- S3 bucket policy and Block Public Access change monitoring
-- Open Security Group rules to `0.0.0.0/0` or `::/0`
-- CloudWatch Logs deletion monitoring
-- Unusual EC2, S3, and RDS usage signals (CloudTrail-based and optional per-resource alarms)
-- CloudTrail and critical-service change monitoring (expanded GuardDuty / Security Hub disable coverage)
-- AWS Config managed compliance rules with NON_COMPLIANT notifications
+- 📬 Managed SNS topic with email subscriptions and publish policy for EventBridge / CloudWatch
+- 🔑 Access key inactivity / rotation compliance and burst usage alarms
+- 🚪 Unauthorized and suspicious console sign-in notifications
+- 👤 IAM policy and role change monitoring
+- 🛡️ Security Group / Network ACL change monitoring
+- 🪣 S3 bucket policy and Block Public Access change monitoring
+- 🌐 Open Security Group rules to `0.0.0.0/0` or `::/0`
+- 🗑️ CloudWatch Logs deletion monitoring
+- 📈 Unusual EC2, S3, and RDS usage signals (CloudTrail-based and optional per-resource alarms)
+- 🚨 CloudTrail and critical-service change monitoring (expanded GuardDuty / Security Hub disable coverage)
+- ✅ AWS Config managed compliance rules with NON_COMPLIANT notifications
 
-## Prerequisites
+## 📋 Prerequisites
 
 Before applying this stack, ensure the target account already has:
 
@@ -32,7 +32,7 @@ Optional: set `create_sns_topic = false` and pass existing topic ARNs in `alarm_
 
 This stack does **not** create CloudTrail trails, Config recorders, or KMS keys.
 
-## Notifications (SNS + email)
+## 📬 Notifications (SNS + email)
 
 When `create_sns_topic = true` (default), the stack creates:
 
@@ -44,7 +44,7 @@ After apply, **confirm each email subscription** from the inbox confirmation mes
 
 You can still append extra ARNs with `alarm_actions`. Use `sns_notify_on_ok` / `sns_notify_on_insufficient_data` to also wire the managed topic to OK / INSUFFICIENT_DATA alarm transitions.
 
-## Architecture
+## 🏗️ Architecture
 
 | Mechanism | Use cases |
 |---|---|
@@ -52,7 +52,7 @@ You can still append extra ARNs with `alarm_actions`. Use `sns_notify_on_ok` / `
 | Metric filters + CloudWatch alarms | Access key API burst, access key management, EC2 launch spikes, S3 API burst, RDS changes, AccessDenied volume, open SG to `0.0.0.0/0` |
 | AWS Config managed rules | Access key rotation, unused credentials, root MFA, S3 public access, EBS/RDS encryption, CloudTrail enabled, password policy |
 
-## Naming
+## 🏷️ Naming
 
 All logical names are defined in `locals.tf` and follow:
 
@@ -66,7 +66,7 @@ Examples:
 - `tf-account-prod-access-key-api-burst`
 - `tf-account-prod-access-keys-rotated`
 
-## Repository layout
+## 📁 Repository layout
 
 | File | Purpose |
 |---|---|
@@ -83,7 +83,7 @@ Examples:
 | `outputs.tf` | Resource ARNs and category summary |
 | `dev.tfvars` / `stage.tfvars` / `prod.tfvars` | Environment-specific values |
 
-## Monitoring catalog
+## 🚨 Monitoring catalog
 
 ### EventBridge rules
 
@@ -142,17 +142,17 @@ When lists are provided and the matching `enable_*` flag is true:
 
 Access-key Config rules are created only when both `enable_config_compliance` and `enable_access_key_monitoring` are true.
 
-## How to use
+## 🚀 How to use
 
 Replace placeholder emails, Config role ARNs, and CloudTrail log group names in the corresponding `.tfvars` file.
 
-### Initialize
+### 1️⃣ Initialize
 
 ```bash
 terraform init
 ```
 
-### Plan / apply per environment
+### 2️⃣ Plan / apply per environment
 
 ```bash
 terraform plan  -var-file=dev.tfvars
@@ -161,7 +161,7 @@ terraform apply -var-file=dev.tfvars
 
 Confirm every SNS email subscription after the first apply.
 
-### Example overrides
+### 3️⃣ Example overrides
 
 ```hcl
 create_sns_topic = true
@@ -184,7 +184,7 @@ enable_rds_usage_alarms = true
 rds_db_instance_identifiers = ["orders-db"]
 ```
 
-## Environment profiles
+## 🌍 Environment profiles
 
 | Setting | `dev.tfvars` | `stage.tfvars` | `prod.tfvars` |
 |---|---|---|---|
@@ -195,7 +195,7 @@ rds_db_instance_identifiers = ["orders-db"]
 | S3 / RDS usage families | Mostly off | On | On |
 | Per-resource lists | Empty placeholders | Empty placeholders | Empty placeholders (fill with inventory) |
 
-## Important variables
+## 🔧 Important variables
 
 | Name | Description |
 |---|---|
@@ -212,7 +212,7 @@ rds_db_instance_identifiers = ["orders-db"]
 | Threshold / period variables | Tune metric alarm sensitivity |
 | `ec2_instance_ids`, `s3_bucket_names`, `rds_db_instance_identifiers` | Optional resource-scoped alarms |
 
-## Outputs
+## 📤 Outputs
 
 | Name | Description |
 |---|---|
@@ -228,7 +228,7 @@ rds_db_instance_identifiers = ["orders-db"]
 | `config_rule_arns` / `config_rule_names` | Config rules by key |
 | `resources_by_category` | Audit-friendly category summary |
 
-## Cost and noise notes
+## 💸 Cost and noise notes
 
 - Metric filters evaluate every matching log event in the CloudTrail log group; busy accounts can increase CloudWatch Logs and custom metric costs.
 - Config managed rules incur Config evaluation charges while the recorder is active.
@@ -236,13 +236,13 @@ rds_db_instance_identifiers = ["orders-db"]
 - Console login without MFA can be noisy if federation or break-glass workflows do not use MFA; disable `enable_console_security_monitoring` or remove that rule family if needed.
 - If Security Hub or GuardDuty already covers overlapping detections, use the `enable_*` flags to avoid duplicate paging.
 
-## Future extensions
+## 🔭 Future extensions
 
 - Geo / CIDR allow-list filtering for unusual console login source IPs
 - AWS Config Conformance Packs for broader CIS / FSBP coverage
 - Severity-tiered SNS topics (warning vs critical) via separate action lists
 
-## Requirements
+## 📦 Requirements
 
 | Name | Version |
 |---|---|
